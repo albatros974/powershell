@@ -229,8 +229,8 @@ Hote-02      10.144.0.20
 Hote-03      10.144.0.30
 
 Il faut tous les joindre dan le domaine
+<#cration des "OU"#>
 
-cration des OU :
 
 New-ADOrganizationalUnit -Name IT -Path "dc=form-it,dc=lab"
 New-ADOrganizationalUnit -Name Vente -Path "dc=form-it,dc=lab"
