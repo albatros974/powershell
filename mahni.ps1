@@ -245,9 +245,10 @@ New-ADOrganizationalUnit -Name Direction -Path "dc=form-it,dc=lab"
  
 New-ADOrganizationalUnit -Name RH -Path "dc=form-it,dc=lab"
 
-
+ Creer les "OU"
 New-ADGroup -name Directeurs -Path "OU=Direction,DC=form-it,DC=lab" -GroupCategory Security -GroupScope Global
 New-ADGroup -name Techniciens -Path "OU=IT,DC=form-it,DC=lab" -
+
 
 
 
