@@ -44,3 +44,16 @@ Dans la nouvelle fenêtre préciser les repositories à comparer
 
 Vérifier les modifications à envoyer en pull (si il y'en a) et créer le full request qui sera validé le repository en question.
 
+
+
+git config user.name "..............."
+
+git config user.email "............@gmail.com"
+
+git add.
+
+git commit -m "mon premier message commit"
+
+git pull origin master
+
+git push origin master
