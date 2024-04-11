@@ -8,6 +8,7 @@ New-VMSwitch -name Externe -NetAdapterName WI-FI
 New-VM -Name Master -SwitchName Interne -Path c:\hyperv\ -NewVHDPath c:\hyper-v\Master\Master.vhdx -NewVHDSizeBytes 200GB -MemoryStartupBytes 4GB -Generation 2
 
 <#activer ou desactiver les ponits de controle - snapshot#>
+Enable-VMIntegrationService -VMName DC-01, Hote-01, hote-02, hote-03 -Name Interface*
 Set-VM -Name Master -CheckpointType Disabled
 
 <#add ou remove Processeur sur les machines#>
@@ -150,4 +151,16 @@ Add-ADGroupMember -Identity Ingenieurs -Members "glanois", "cmarquis"
 Add-ADGroupMember -Identity Recruteurs -Members "mcarnot", "kmarot"
 Add-ADGroupMember -Identity Vendeurs -Members "cmeunier", "abillot"
 
-
+<#Ajouter carte reseau virtuel a vm#>
+Add-VMNetworkAdapter -VMName Hote-01 -SwitchName Pulsation -Name Pulsation
+Add-VMNetworkAdapter -VMName Hote-02 -SwitchName Pulsation -Name Pulsation
+Add-VMNetworkAdapter -VMName Hote-03 -SwitchName MPIO1 -Name MPIO1
+Add-VMNetworkAdapter -VMName Hote-03 -SwitchName MPIO2 -Name MPIO2
+Add-VMNetworkAdapter -VMName Hote-01 -SwitchName MPIO1 -Name MPIO1
+Add-VMNetworkAdapter -VMName Hote-02 -SwitchName MPIO1 -Name MPIO1
+Add-VMNetworkAdapter -VMName Hote-01 -SwitchName MPIO2 -Name MPIO2
+Add-VMNetworkAdapter -VMName Hote-02 -SwitchName MPIO2 -Name MPIO2
+Add-VMNetworkAdapter -VMName DC-01 -SwitchName Externe -Name Externe
+Add-VMNetworkAdapter -VMName Hote-01 -SwitchName Externe -Name Externe
+Add-VMNetworkAdapter -VMName Hote-02 -SwitchName Externe -Name Externe
+Add-VMNetworkAdapter -VMName HOTE-03 -SwitchName Externe -Name Externe
