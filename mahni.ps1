@@ -153,7 +153,7 @@ Enable-VMIntegrationService -VMName DC-01, Hote-01, hote-02, hote-03 -Name Inter
 set-VM -Name DC-01, Hote-01,  Hote-02,  Hote-03 -ProcessorCount 2
 
 09/04/2024
-
+/*exo0*/
 DC-01
 renommer l'utilisateur en admin
 renommer la carte reseau en interne et renommer la VM en DC-01
