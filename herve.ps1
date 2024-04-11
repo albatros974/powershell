@@ -157,3 +157,45 @@ New-ADOrganizationalUnit -Name $OUName -Path $ParentOUPath
 Dans cet exemple, $ParentOUPath est défini sur "DC=mondomaine,DC=local", ce qui indique que la nouvelle OU sera créée à la racine du domaine mondomaine.local.//exemple: $ParentOUPath = "DC=form-it,DC=loc".
 New-AdGroup -name Vendeurs -Path "OU=Ventes,DC=form-it,DC=lab" -GroupCategory Security -GroupScope Global Universal
 
+# Spécifier le nom de l'unité d'organisation (OU) à créer
+$OUName = "MonNouvelOU"
+
+# Spécifier le chemin complet de l'OU parente (racine du domaine)
+$ParentOUPath = "DC=mondomaine,DC=local"
+
+# Créer l'unité d'organisation
+New-ADOrganizationalUnit -Name $OUName -Path $ParentOUPath
+Dans cet exemple, $ParentOUPath est défini sur "DC=mondomaine,DC=local", ce qui indique que la nouvelle OU sera créée à la racine du domaine mondomaine.local.//exemple: $ParentOUPath = "DC=form-it,DC=loc".
+New-AdGroup -name Vendeurs -Path "OU=Ventes,DC=form-it,DC=lab" -GroupCategory Security -GroupScope Global Universal
+
+# Créer des groupes d'utilisateurs
+New-ADGroup -name Directeurs -Path "OU=Direction,DC=form-it,DC=loc" -GroupCategory Security -GroupScope Global
+New-ADGroup -name Techniciens -Path "OU=IT,DC=form-it,DC=loc" -GroupCategory Security -GroupScope Global
+New-ADGroup -name Ingenieurs -Path "OU=IT,DC=form-it,DC=loc" -GroupCategory Security -GroupScope Global
+New-ADGroup -name Recrureurs -Path "OU=RH,DC=form-it,DC=loc" -GroupCategory Security -GroupScope Global
+New-ADGroup -name Vendeurs -Path "OU=Vente,DC=form-it,DC=loc" -GroupCategory Security -GroupScope Global
+
+function Ajouter-UtilisateurAuGroupe {
+    param(
+        [string]$NomGroupe
+    )
+
+    # Demander à l'utilisateur d'entrer les informations de l'utilisateur
+    $NomUtilisateur = Read-Host "Entrez le nom de l'utilisateur"
+    $Prénom = Read-Host "Entrez le prénom de l'utilisateur"
+    $Nom = Read-Host "Entrez le nom de famille de l'utilisateur"
+    $NomDeCompte = Read-Host "Entrez le nom de compte de l'utilisateur"
+    $Description = Read-Host "Entrez la description de l'utilisateur"
+
+    # Demander à l'utilisateur de saisir le mot de passe de manière sécurisée
+    $MotDePasse = Read-Host "Saisissez le mot de passe pour $NomUtilisateur" -AsSecureString
+
+    # Créer l'utilisateur dans Active Directory
+    New-ADUser -Name $NomUtilisateur -GivenName $Prénom -Surname $Nom -SamAccountName $NomDeCompte -UserPrincipalName "$NomDeCompte@domaine.local" -Description $Description -AccountPassword $MotDePasse -Enabled $true
+
+    # Ajouter l'utilisateur au groupe dans Active Directory
+    Add-ADGroupMember -Identity $NomGroupe -Members $NomDeCompte
+
+    Write-Host "L'utilisateur $NomUtilisateur a été créé et ajouté au groupe $NomGroupe avec succès."
+}
+
