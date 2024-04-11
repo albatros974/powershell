@@ -17,7 +17,7 @@ Vous allez pouvoir maintenant cloner votre fork :
 
 - Passons aux lignes de commande
 
-git clone https://github.com/NOM_DE_VOTRE_DOSSIER/powershell.git
+git clone https://github.com/POWERSHELL/powershell.git
 
 - add le remote repository de Ilan :
 
