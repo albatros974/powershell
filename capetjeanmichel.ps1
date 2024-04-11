@@ -5,7 +5,7 @@ albatros974
 
 
 git config user.name "capetjeanmichel"
-
+clear
 git config user.email "capetjeanmichel7030@gmail.com"
 
 git add.
