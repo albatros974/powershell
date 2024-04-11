@@ -1,69 +1,126 @@
-Creation d'une VM (Master)
+<#Creation d'une VM (Master)#>
 
-/*activation du Hyper-V sur le machine en cas de deja installe*/
+<#activation du Hyper-V sur le machine en cas de deja installe#>
 enabled-WindowsOptionalFeature -Online -FeatureName Microsoft-hyper-v-all
 New-VMSwitch -name Externe -NetAdapterName WI-FI
----
-/*Creation de une nouvelle machine virtuelle*/
+
+<#Creation de une nouvelle machine virtuelle#>
 New-VM -Name Master -SwitchName Interne -Path c:\hyperv\ -NewVHDPath c:\hyper-v\Master\Master.vhdx -NewVHDSizeBytes 200GB -MemoryStartupBytes 4GB -Generation 2
----
-/*activer ou desactiver les ponits de controle - snapshot*/
+
+<#activer ou desactiver les ponits de controle - snapshot#>
 Set-VM -Name Master -CheckpointType Disabled
----
-/*add ou remove Processeur sur les machines*/
+
+<#add ou remove Processeur sur les machines#>
 Set-VM -Name Master -ProcessorCount 2
----
-/*mount drive dvd disque sur le machine*/
+
+<#mount drive dvd disque sur le machine#>
 Add-VMDvdDrive -VMName Master -Path C:\ISO\fr-fr_windows_server_2022_x64_dvd_9f7d1adb.iso
----
+
 $vmdvd = Get-VMDvdDrive -VMName Master
----
-/*changer la ordre de boot - en cas par disque dvd*/
+
+<#changer la ordre de boot - en cas par disque dvd#>
 Set-VMFirmware -VMName Master -FirstBootDevice $vmdvd
----
-/*activer service d'invite*/
+
+<#activer service d'invite#>
 Enable-VMIntegrationService -VMName "Master" -Name Interface*
----
-/*Verifier les switches existantes*/
+
+<#Verifier les switches existantes#>
 Get-NetAdapter
----
-/*creation des switchs*/
+
+<#Renomer Computer#>
+Rename-Computer HOTE-03
+
+<#changer le nom  d'user #>
+Rename-LocalUser -Name Administrateur -NewName admin
+
+<#changer le nome de carte reseau#>
+Get-NetAdapter -Name Ethernet | Rename-NetAdapter -NewName Interne
+Rename-NetAdapter -name ethernet -NewName Interne
+
+<#changer le IP#>
+New-NetIPAddress -InterfaceIndex 4 -IPAddress 10.144.0.30  -PrefixLength 24 -DefaultGateway 10.144.0.1
+
+<#Add DNS#>
+Set-DnsClientServerAddress -InterfaceIndex 6 -ServerAddresses 10.144.0.1
+
+
+<#creation des switchs#>
 New-VMSwitch -name MPIO1 -SwitchType Private
 New-VMSwitch -name MPIO2 -SwitchType Private
 New-VMSwitch -name Pulsation -SwitchType Private   
 New-VMSwitch -name Interne -SwitchType Internal
 New-VMSwitch -name Externe -NetAdapterName WI-FI
----
-/*Format la machine*/
+
+<#Format la machine#><#ATT: 
+ne pas aplliquer sysprep sur le machine physique - tres grave perdu de machine 
+cocher lectture seule en disque#>
 C:\windows\system32\sysprep\sysprep.exe /generalize /oobe /shutdown
 
-/*ATT: 
-ne pas aplliquer sysprep sur le machine physique - tres grave perdu de machine 
-cocher lectture seule en disque*/
-----
-/*Creer OUs*/
+
+<#Creation des disques avec diferenciation#>
+New-VHD -Path C:\HyperV\Hote-01\Hote-01.vhdx -ParentPath c:\HyperV\Master\Master.vhdx -Differencing
+New-VHD -Path C:\HyperV\Hote-02\Hote-02.vhdx -ParentPath c:\HyperV\Master\Master.vhdx -Differencing
+New-VHD -Path C:\HyperV\Hote-03\Hote-03.vhdx -ParentPath c:\HyperV\Master\Master.vhdx -Differencing
+
+<#Creation des hotes#>
+New-VM -Name Hote-03 -MemoryStartupBytes 2GB -Path c:\HyperV\Hote-03 -VHDPath C:\HyperV\Hote-03\Hote-03.vhdx -Generation 2 -SwitchName interne
+ New-VM -Name Hote-02 -MemoryStartupBytes 2GB -Path c:\HyperV\Hote-02 -VHDPath C:\HyperV\Hote-02\Hote-02.vhdx -Generation 2 -SwitchName interne
+ New-VM -Name Hote-01 -MemoryStartupBytes 2GB -Path c:\HyperV\Hote-01 -VHDPath C:\HyperV\Hote-01\Hote-01.vhdx -Generation 2 -SwitchName interne
+ New-VM -Name DC-01 -MemoryStartupBytes 2GB -Path c:\HyperV\DC-01 -VHDPath C:\HyperV\DC-01\DC-01.vhdx -Generation 2 -SwitchName interne
+ Enable-VMIntegrationService -VMName DC-01, Hote-01, hote-02, hote-03 -Name Interface*
+ Set-VM -Name DC-01, Hote-01, hote-02, hote-03 -ProcessorCount 2
+ Set-VM -Name DC-01, Hote-01, hote-02, hote-03 -CheckpointType Disabled
+
+
+<#Renomer Computer#>
+Rename-Computer HOTE-03
+
+
+
+<#changer le nome de carte reseau#>
+Get-NetAdapter -Name Ethernet | Rename-NetAdapter -NewName Interne
+Rename-NetAdapter -name ethernet -NewName Interne
+
+<#changer le IP#>
+New-NetIPAddress -InterfaceIndex 4 -IPAddress 10.144.0.30  -PrefixLength 24 -DefaultGateway 10.144.0.1
+
+<#Add DNS#>
+Set-DnsClientServerAddress -InterfaceIndex 6 -ServerAddresses 10.144.0.1
+
+#Ajouter au domaine#>
+Add-Computer -DomainName form-it.lab -Credential admin@form-it.lab -Restart
+
+<#Installer ADDS#>
+Install-WindowsFeature -name AD-Domain-Services -IncludeAllSubFeature -IncludeManagementTools
+
+<#Promouvoir le serveur en controlleur de domaine#>
+Install-ADDSForest -DomainName form-it.lab -InstallDns:$true - 
+
+<#Installer DHCP#>
+ Install-WindowsFeature DHCP -IncludeAllSubFeature -IncludeManagementTools
+
+<#Configurer Zone de recherche inversee#>
+ Add-DnsServerPrimaryZone -ComputerName DC-01 -NetworkId "10.144.0.1/24" -DynamicUpdate Secure -ReplicationScope Domain
+
+<#Configurer le pointer#>
+Add-DnsServerResourceRecordPtr -Name "0.1" -PtrDomainName "DC-01.form-it.lab" -ZoneName "144.10.in-addr.arpa" -ComputerName DC-01
+
+
+<#Creer OUs#>
 New-ADOrganizationalUnit -Name Direction -Path "dc=form-it,dc=lab"
 New-ADOrganizationalUnit -Name RH -Path "dc=form-it,dc=lab"
 New-ADOrganizationalUnit -Name IT -Path "dc=form-it,dc=lab"
 New-ADOrganizationalUnit -Name Vente -Path "dc=form-it,dc=lab"
 
 
-/*Creer Group*/
+<#Creer Group#>
 New-ADGroup -Name Vendeurs -Path "OU=Vente,DC=form-it,DC=lab" -GroupCategory Security -GroupScope Global
 New-ADGroup -Name Directeurs -Path "OU=Direction,DC=form-it,DC=lab" -GroupCategory Security -GroupScope Global
 New-ADGroup -Name Recruteurs -Path "OU=RH,DC=form-it,DC=lab" -GroupCategory Security -GroupScope Global
 New-ADGroup -Name Techniciens -Path "OU=IT,DC=form-it,DC=lab" -GroupCategory Security -GroupScope Global
 New-ADGroup -Name Ingenieurs -Path "OU=IT,DC=form-it,DC=lab" -GroupCategory Security -GroupScope Global
 
-/*Creer Utilisateurs*/
-/*Creer Group*/
-New-ADGroup -Name Vendeurs -Path "OU=Vente,DC=form-it,DC=lab" -GroupCategory Security -GroupScope Global
-New-ADGroup -Name Directeurs -Path "OU=Direction,DC=form-it,DC=lab" -GroupCategory Security -GroupScope Global
-New-ADGroup -Name Recruteurs -Path "OU=RH,DC=form-it,DC=lab" -GroupCategory Security -GroupScope Global
-New-ADGroup -Name Techniciens -Path "OU=IT,DC=form-it,DC=lab" -GroupCategory Security -GroupScope Global
-New-ADGroup -Name Ingenieurs -Path "OU=IT,DC=form-it,DC=lab" -GroupCategory Security -GroupScope Global
-
-/*Creer Utilisateurs*/
+<#Creer Utilisateurs#>
 New-ADUser -Name  "Eric Forest" -SamAccountName "forest" -Path "OU=Direction,DC=form-it,DC=lab"
 New-ADUser -Name  "Richard Vachon" -SamAccountName "rvachon" -Path "OU=Direction,DC=form-it,DC=lab"
 New-ADUser -Name  "Pierre Artaud" -SamAccountName "partaud" -Path "OU=IT,DC=form-it,DC=lab"
@@ -85,7 +142,8 @@ Set-ADAccountPassword -Identity mcarnot
 Set-ADAccountPassword -Identity kmarot
 Set-ADAccountPassword -Identity cmeunier
 Set-ADAccountPassword -Identity abillot
-
+<##>
+<#Ajouter user sur le group#>
 Add-ADGroupMember -Identity Directeurs -Members "forest", "rvachon"
 Add-ADGroupMember -Identity Techniciens -Members "partaud", "jgarnier"
 Add-ADGroupMember -Identity Ingenieurs -Members "glanois", "cmarquis"
